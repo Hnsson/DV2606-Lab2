@@ -4,6 +4,7 @@
 
 #define swap(A,B) {int temp=A;A=B;B=temp;}
 
+// Performing odd phase of odd-even sort
 __global__ void oddEvenSort(int *arr, int n) {
     int i;
 
@@ -21,6 +22,7 @@ __global__ void oddEvenSort(int *arr, int n) {
     }
 }
 
+// Init array with random values
 void
 init_arr(int *arr, int size)
 {
@@ -29,6 +31,7 @@ init_arr(int *arr, int size)
         arr[i] = rand() % (100- 1);
 }
 
+// Check if array is sorted
 void
 sorted(int *v, int size)
 {
@@ -89,13 +92,13 @@ main()
 
     oddEvenSort<<<gridSize, blockSize>>>(d_arr, n);
     cudaDeviceSynchronize();
+    
+    // Copy sorted data from device to host
+    cudaMemcpy(arr, d_arr, size, cudaMemcpyDeviceToHost);
 
     t = clock() - t; 
     double time_taken = ((double)t)/CLOCKS_PER_SEC; // in seconds 
     printf("sorting took %f seconds to execute \n", time_taken); 
-
-    // Copy sorted data from device to host
-    cudaMemcpy(arr, d_arr, size, cudaMemcpyDeviceToHost);
 
     sorted(arr, n);
     // print_arr(arr, n);

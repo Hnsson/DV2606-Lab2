@@ -5,6 +5,7 @@
  ***************************************************************************/
 
 #include <stdio.h>
+#include <time.h>
 
 #define MAX_SIZE 4096
 
@@ -34,7 +35,14 @@ main(int argc, char** argv)
     Init_Default();		/* Init default values	*/
     Read_Options(argc, argv);	/* Read arguments	*/
     Init_Matrix();		/* Init the matrix	*/
+
+    clock_t t;
+    t = clock();
     work();
+    t = clock() - t;
+    double time_taken = ((double)t)/CLOCKS_PER_SEC; // in seconds
+    printf("gauss jordan took %.3f seconds to execute \n", time_taken);
+
     if (PRINT == 1)
         Print_Matrix();
 }

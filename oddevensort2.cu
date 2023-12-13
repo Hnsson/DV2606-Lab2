@@ -5,51 +5,35 @@
 
 #define swap(A,B) {int temp=A;A=B;B=temp;}
 
-// First kernel to perform odd phase of odd-even sort
+// Performing odd phase of odd-even sort
 __global__ void oddPhaseSort(int *arr, int n) {
-    int i = blockIdx.x * blockDim.x + threadIdx.x;
-
-    if (i % 2 == 0 && i < n - 1) {
-        if (arr[i] > arr[i + 1]) {
-            swap(arr[i], arr[i + 1]);
+    for (int i = blockIdx.x * blockDim.x + threadIdx.x; i < n - 1; i += gridDim.x * blockDim.x) {
+        if (i % 2 != 0) {
+            if (arr[i] > arr[i + 1]) {
+                swap(arr[i], arr[i + 1]);
+            }
         }
     }
 }
 
-// Second kernel to perform even phase of odd-even sort
+// Performing even phase of odd-even sort
 __global__ void evenPhaseSort(int *arr, int n) {
-    int i = blockIdx.x * blockDim.x + threadIdx.x;
-
-    if (i % 2 != 0 && i < n - 1) {
-        if (arr[i] > arr[i + 1]) {
-            swap(arr[i], arr[i + 1]);
+    for (int i = blockIdx.x * blockDim.x + threadIdx.x; i < n - 1; i += gridDim.x * blockDim.x) {
+        if (i % 2 == 0) {
+            if (arr[i] > arr[i + 1]) {
+                swap(arr[i], arr[i + 1]);
+            }
         }
     }
 }
 
-// __global__ void oddEvenSort(int *arr, int n) {
-//     int i = blockIdx.x * blockDim.x + threadIdx.x;
-
-//     if (i % 2 == 0 && i < n - 1) {
-//         if (arr[i] > arr[i + 1]) {
-//             swap(arr[i], arr[i + 1]);
-//         }
-//     }
-
-//     if (i % 2 != 0 && i < n - 1) {
-//         if (arr[i] > arr[i + 1]) {
-//             swap(arr[i], arr[i + 1]);
-//         }
-//     }
-// }
-
-
-
+// Init array with random values
 void init_arr(int *arr, int size) {
     for (int i = 0; i < size; i++)
         arr[i] = rand() % (100 - 1);
 }
 
+// Check if array is sorted
 void
 sorted(int *v, int size)
 {
@@ -99,14 +83,15 @@ int main() {
     // Copy input array from host to device
     cudaMemcpy(d_array, array, arraySize * sizeof(int), cudaMemcpyHostToDevice);
 
-    // Launch the kernel with appropriate block and grid dimensions
+    // Launch the kernel with thread and block dimensions
     int T = 256;
+    // int B = 10;
     int B = ceil((float) arraySize / T);
 
     clock_t t; 
     t = clock(); 
 
-    for (int phase = 0; phase < arraySize; ++phase) {
+    for (int phase = 0; phase < arraySize; phase++) {
         if (phase % 2 == 0) {
             evenPhaseSort<<<B, T>>>(d_array, arraySize);
         } else {
@@ -114,13 +99,13 @@ int main() {
         }
     }
 
+    
+    // Copy the result back from the device to the host
+    cudaMemcpy(array, d_array, arraySize * sizeof(int), cudaMemcpyDeviceToHost);
+    
     t = clock() - t; 
     double time_taken = ((double)t)/CLOCKS_PER_SEC; // in seconds 
     printf("sorting took %f seconds to execute \n", time_taken); 
-
-    // Copy the result back from the device to the host
-    cudaMemcpy(array, d_array, arraySize * sizeof(int), cudaMemcpyDeviceToHost);
-
     // Free memory on the device
     cudaFree(d_array);
 
